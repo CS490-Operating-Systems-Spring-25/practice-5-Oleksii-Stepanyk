@@ -31,87 +31,95 @@ write "cccccccccccccccccccccccccccc" to 217
 write "cccccccccccccccccccccccccccc" to 218
 write "cccccccccccccccccccccccccccc" to 219
 write "cccccccccccccccccccccccccccc" to 220
+cpu_exec
 
 label start
     var counter
+    var char
 
-    // Let's move up
     write 195 to var:counter
-    label loop_move_up
-        copy var:counter to REG_A
-        write OP_INCR to REG_OP
-        cpu_exec
-        copy REG_RES to var:counter
+    copy var:counter to REG_A
+    write 221 to REG_B
+    write OP_RENDER_BITMAP to REG_OP
+    cpu_exec
+    jump label:user_input
 
-        copy var:counter to REG_A
-        write 21 to REG_B
-        write OP_ADD to REG_OP
-        cpu_exec
+label user_input
+    write 200 to var:counter
+    write OP_READ_INPUT to REG_OP
+    write KEYBOARD_READ_CHAR_SILENTLY to REG_A
+    cpu_exec
 
-        copy var:counter to REG_A
-        copy REG_RES to REG_B
-        write OP_RENDER_BITMAP to REG_OP
-        cpu_exec
+    copy KEYBOARD_BUFFER to var:char
+    copy var:char to REG_A
+    write "a" to REG_B
+    write OP_STARTS_WITH to REG_OP
+    cpu_exec
+    jump_if label:shift_left
 
-        write "0.1" to REG_A
-        write OP_NOP to REG_OP
-        cpu_exec
+    copy var:char to REG_A
+    write "d" to REG_B
+    write OP_STARTS_WITH to REG_OP
+    cpu_exec
+    jump_if label:shift_right
 
-        copy var:counter to REG_A
-        write 200 to REG_B
-        write OP_CMP_NEQ to REG_OP
-        cpu_exec
-        jump_if label:loop_move_up
+    copy var:char to REG_A
+    write "q" to REG_B
+    write OP_STARTS_WITH to REG_OP
+    cpu_exec
+    jump_if label:exit
 
-    // let's move down
-    label loop_move_down
-        copy var:counter to REG_A
-        write OP_DECR to REG_OP
-        cpu_exec
-        copy REG_RES to var:counter
+    jump label:user_input
 
-        copy var:counter to REG_A
-        write 21 to REG_B
-        write OP_ADD to REG_OP
-        cpu_exec
+label shift_right
+    write "c" to REG_A
+    copy *var:counter to REG_B
+    write "" to REG_C
+    write OP_CONCAT_WITH to REG_OP
+    cpu_exec
+    copy REG_RES to *var:counter
 
-        copy var:counter to REG_A
-        copy REG_RES to REG_B
-        write OP_RENDER_BITMAP to REG_OP
-        cpu_exec
+    copy var:counter to REG_A
+    write OP_INCR to REG_OP
+    cpu_exec
+    copy REG_RES to var:counter
 
-        write "0.1" to REG_A
-        write OP_NOP to REG_OP
-        cpu_exec
+    copy var:counter to REG_A
+    write 217 to REG_B
+    write OP_CMP_LT to REG_OP
+    cpu_exec
+    jump_if label:shift_right
+    write 195 to REG_A
+    write 221 to REG_B
+    write OP_RENDER_BITMAP to REG_OP
+    cpu_exec
+    jump label:user_input
 
-        write 196 to REG_A
-        copy var:counter to REG_B
-        write OP_CMP_LT to REG_OP
-        cpu_exec
-        jump_if label:loop_move_down
+label shift_left
+    copy *var:counter to REG_A
+    write "1" to REG_B
+    write "" to REG_C
+    write "" to REG_D
+    write OP_REPLACE_COLUMN to REG_OP  
+    cpu_exec
+    copy REG_RES to *var:counter
 
-    // let's shift bitmap to the right
-        write 200 to var:counter
-    label shift_right
-        write "c" to REG_A
-        copy *var:counter to REG_B
-        write "" to REG_C
-        write OP_CONCAT_WITH to REG_OP
-        cpu_exec
-        copy REG_RES to *var:counter
+    copy var:counter to REG_A
+    write OP_INCR to REG_OP
+    cpu_exec
+    copy REG_RES to var:counter
 
-        copy var:counter to REG_A
-        write OP_INCR to REG_OP
-        cpu_exec
-        copy REG_RES to var:counter
-
-        copy var:counter to REG_A
-        write 217 to REG_B
-        write OP_CMP_LT to REG_OP
-        cpu_exec
-        jump_if label:shift_right
-
-jump label:start
-
-write OP_HALT to REG_OP
-cpu_exec
+    copy var:counter to REG_A
+    write 217 to REG_B
+    write OP_CMP_LT to REG_OP
+    cpu_exec
+    jump_if label:shift_left
+    write 195 to REG_A
+    write 221 to REG_B
+    write OP_RENDER_BITMAP to REG_OP
+    cpu_exec
+    jump label:user_input
+    
+label exit
+    write OP_HALT to REG_OP
+    cpu_exec
